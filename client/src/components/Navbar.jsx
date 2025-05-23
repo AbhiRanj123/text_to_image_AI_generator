@@ -4,12 +4,13 @@ import { assets } from '../assets/assets';
 import { AppContext } from '../contexts/AppContext';
 
 const Navbar = () => {
-    const {user} = useContext(AppContext);
+    const {user, isSticky, setShowLoginModal} = useContext(AppContext);
     const navigate = useNavigate();
   return (
-    <div className='flex items-center justify-between py-4'>
+    <div className={`flex items-center justify-between py-4 px-6
+          ${isSticky ? 'sticky top-1 bg-white/30 backdrop-blur-md rounded-full shadow-md' : ''}`}>
       <Link to={"/"}>
-        <img src={assets.logo} alt="" className='w-25 sm:w-29 lg:w-37' />
+        <img src={assets.logo} alt="" className='w-12.5 sm:w-29 lg:w-37' />
       </Link>
 
       <div>
@@ -34,7 +35,7 @@ const Navbar = () => {
         <div className='flex items-center gap-2 sm:gap-5'>
             <p onClick={()=> navigate('/buy-credit')}
             className='cursor-pointer'>Pricing</p>
-            <button className='bg-zinc-800 text-white px-7 py-2 sm:px-10 text-sm rounded-full'>Login</button>
+            <button onClick={()=>setShowLoginModal(true)} className='bg-zinc-800 text-white px-7 py-2 sm:px-10 text-sm rounded-full'>Login</button>
         </div>
         }
       </div> 
