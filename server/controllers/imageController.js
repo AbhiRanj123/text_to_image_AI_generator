@@ -35,7 +35,7 @@ export const generateImage = async(req,res) => {
         res.json({
             success: true,
             message: "Image generated successfully",
-            creditBalance : user.creditBalance - 1,
+            credits : user.creditBalance - 1,
             imageUrl
         })
     }
