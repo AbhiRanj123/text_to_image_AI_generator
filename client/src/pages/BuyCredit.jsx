@@ -3,19 +3,65 @@ import { assets, plans } from '../assets/assets'
 import { useContext } from 'react'
 import { AppContext } from '../contexts/AppContext'
 import { motion } from 'framer-motion'
+import { toast } from 'react-toastify'
+import axios from 'axios'
 
 const BuyCredit = () => {
 
-  const {user,navigate,setShowLoginModal} = useContext(AppContext);
+  const {user, navigate, setShowLoginModal, backendUrl, token, creditData} = useContext(AppContext);
 
-  const onClickHandler = () => {
-    if(user){
-      navigate('/result');
+  // const onClickHandler = () => {
+  //   if(user){
+  //     navigate('/result');
+  //   }
+  //   else{
+  //     setShowLoginModal(true);
+  //   }
+  // };
+  const initializePayment = async(order) => {
+    const options ={
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: "Buy Credits with payments",
+      description: "Purchase Credits",
+      order_id: order.id,
+      receipt: order.receipt,
+      handler:async(response) => {
+        try{
+          const { data } = await axios.post(backendUrl + '/api/user/verify-payment', 
+            response,
+            {headers: {token}}
+          )
+          if(data.success){
+            creditData();
+            navigate('/');
+            toast.success('Payment successful! Credits added to your account.');
+          }
+        }
+        catch(error){
+          toast.error(error.message);
+        }
+      }
+    };
+    const razorpay = new window.Razorpay(options);
+    razorpay.open();
+  }
+  const paymentHandler = async(planId) => {
+    try{
+      if(!user){
+        setShowLoginModal(true);
+      }
+      const { data } = await axios.post(backendUrl + '/api/user/payment', {planId}, {headers: {token}});
+      if(data.success){
+        initializePayment(data.order);
+      }
     }
-    else{
-      setShowLoginModal(true);
+    catch(error){
+      toast.error(error.message);
+      console.error('Payment error:', error.message);
     }
-  };
+  }
   return (
     <motion.div 
       initial={{opacity:0.2, y:100}}
@@ -34,7 +80,7 @@ const BuyCredit = () => {
             <p className='mt-3 mb-1 font-semibold'>{plan.id}</p>
             <p className='text-sm'>{plan.desc}</p>
             <p className='mt-6'><span className='text-3xl font-medium'>${plan.price}</span> for {plan.credits} credits</p>
-            <button onClick={() => onClickHandler()} className='w-full bg-gray-800 text-white mt-8 text-sm rounded-md py-2.5 min-w-52'>{user ? 'Purchase' : 'Get Started'}</button>
+            <button onClick={() =>paymentHandler(plan.id)} className='w-full bg-gray-800 text-white mt-8 text-sm rounded-md py-2.5 min-w-52'>{user ? 'Purchase' : 'Get Started'}</button>
           </div>
         ))}
       </div>
